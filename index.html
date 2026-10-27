@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дмитрий Ковалев — IT Infrastructure · Retail · Automation</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --mnk-font-display: 'Chakra Petch', sans-serif;
+      --mnk-font-form: 'Inter', 'Archivo', sans-serif;
+      --mnk-font-mono: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+
+      --bg-0: #06080b;
+      --bg-1: #0c1017;
+      --bg-2: #121822;
+      --bg-inset: #070a0f;
+      --fg-1: #f4f7fb;
+      --fg-2: #9ba8be;
+      --fg-3: #5f6d84;
+
+      --surface-base: var(--bg-0);
+      --surface-card: var(--bg-1);
+      --surface-elevated: var(--bg-2);
+      --surface-inset: var(--bg-inset);
+      --surface-glass: rgba(8, 11, 16, 0.94);
+      --surface-container: rgba(7, 9, 13, 0.92);
+
+      --border-grid: rgba(42, 53, 72, 0.72);
+      --border-focus: #4a5a78;
+      --accent: #10b981;
+      --accent-cyan: #06b6d4;
+      --accent-amber: #f59e0b;
+      --accent-soft: rgba(16, 185, 129, 0.12);
+      --accent-border: rgba(16, 185, 129, 0.45);
+
+      --dot-base: rgba(100, 116, 139, 0.22);
+    }
+
+    [data-theme="light"] {
+      --bg-0: #f1f5f9;
+      --bg-1: #ffffff;
+      --bg-2: #f1f5f9;
+      --bg-inset: #f8fafc;
+      --fg-1: #0f172a;
+      --fg-2: #334155;
+      --fg-3: #64748b;
+
+      --surface-base: var(--bg-0);
+      --surface-card: var(--bg-1);
+      --surface-elevated: var(--bg-2);
+      --surface-inset: var(--bg-inset);
+      --surface-glass: rgba(255, 255, 255, 0.95);
+      --surface-container: rgba(248, 250, 252, 0.94);
+
+      --border-grid: rgba(186, 198, 216, 0.85);
+      --border-focus: #64748b;
+      --accent: #059669;
+      --accent-cyan: #0284c7;
+      --accent-amber: #d97706;
+      --accent-soft: rgba(5, 150, 105, 0.1);
+      --accent-border: rgba(5, 150, 105, 0.42);
+
+      --dot-base: rgba(100, 116, 139, 0.25);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--surface-base);
+      color: var(--fg-1);
+      font-family: var(--mnk-font-form);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow-x: hidden;
+      position: relative;
+      background-image: radial-gradient(var(--dot-base) 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-position: 0 0;
+    }
+
+    #archPipelineCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .reveal-on-scroll {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-on-scroll.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .pipeline-scroll-hud {
+      position: fixed;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.65rem;
+      color: var(--accent);
+      pointer-events: none;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-grid);
+      padding: 0.65rem 0.4rem;
+    }
+
+    .hud-track {
+      width: 3px;
+      height: 96px;
+      background: var(--border-grid);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hud-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: var(--accent);
+    }
+
+    .hud-vertical-lbl {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 0.12em;
+      color: var(--fg-2);
+    }
+
+    .arch-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      border-left: 1px solid var(--border-grid);
+      border-right: 1px solid var(--border-grid);
+      position: relative;
+      z-index: 2;
+      background: var(--surface-container);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface-glass);
+      border-bottom: 1px solid var(--border-grid);
+    }
+
+    .nav-bar {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      border-left: 1px solid var(--border-grid);
+      border-right: 1px solid var(--border-grid);
+    }
+
+    .brand {
+      padding: 0.9rem 1.5rem;
+      font-family: var(--mnk-font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg-1);
+      text-decoration: none;
+      border-right: 1px solid var(--border-grid);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand span {
+      font-family: var(--mnk-font-mono);
+      color: var(--accent);
+    }
+
+    nav { display: flex; padding: 0 1.5rem; gap: 1.8rem; }
+    nav a {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.76rem;
+      color: var(--fg-2);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    nav a:hover { color: var(--accent); }
+
+    .nav-actions { display: flex; align-items: center; border-left: 1px solid var(--border-grid); }
+    .nav-icon-link {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.75rem;
+      color: var(--fg-2);
+      text-decoration: none;
+      padding: 0.95rem 1.1rem;
+      border-right: 1px solid var(--border-grid);
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-icon-link:hover { color: var(--fg-1); background: var(--surface-elevated); }
+
+    .theme-btn {
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border-grid);
+      color: var(--fg-2);
+      padding: 0.95rem 1.1rem;
+      cursor: pointer;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.75rem;
+      transition: color 0.2s, background 0.2s;
+    }
+    .theme-btn:hover { color: var(--fg-1); background: var(--surface-elevated); }
+
+    .nav-cta {
+      padding: 0.95rem 1.4rem;
+      font-family: var(--mnk-font-display);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--fg-1);
+      text-decoration: none;
+      background: var(--accent-soft);
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-cta:hover { background: var(--accent); color: #ffffff; }
+
+    .section-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 1.5rem;
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      font-family: var(--mnk-font-mono);
+      font-size: 0.7rem;
+      color: var(--fg-2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background-color: var(--accent);
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      border-bottom: 1px solid var(--border-grid);
+    }
+
+    .hero-main {
+      padding: 3.25rem 2.75rem;
+      border-right: 1px solid var(--border-grid);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      padding: 0.32rem 0.75rem;
+      margin-bottom: 1.35rem;
+      letter-spacing: 0.06em;
+    }
+
+    h1 {
+      font-family: var(--mnk-font-display);
+      font-size: clamp(2rem, 3.6vw, 3.1rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      color: var(--fg-1);
+    }
+    h1 span { color: var(--accent); display: inline-block; }
+
+    .hero-lead {
+      font-size: 1.02rem;
+      color: var(--fg-2);
+      max-width: 58ch;
+      line-height: 1.6;
+    }
+    .hero-lead strong { color: var(--fg-1); font-weight: 600; }
+
+    .hero-actions { display: flex; gap: 0.85rem; margin-top: 2rem; flex-wrap: wrap; }
+    .btn-primary, .btn-secondary {
+      font-family: var(--mnk-font-display);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.85rem 1.4rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      transition: transform 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--fg-1); color: var(--surface-base); border: 1px solid var(--fg-1); }
+    .btn-primary:hover { background: var(--accent); border-color: var(--accent); color: #ffffff; transform: translateY(-2px); }
+    .btn-secondary { border: 1px solid var(--border-focus); color: var(--fg-1); background: var(--surface-card); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+    .hero-quick-contacts {
+      margin-top: 2.25rem;
+      padding-top: 1.2rem;
+      border-top: 1px dashed var(--border-grid);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.35rem;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.76rem;
+    }
+    .hero-quick-contacts a { color: var(--fg-2); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
+    .hero-quick-contacts a:hover { color: var(--accent); }
+    .hero-quick-contacts span.lbl { color: var(--fg-3); }
+
+    .hero-blueprint {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--surface-elevated);
+      padding: 2.25rem;
+    }
+
+    .topology-panel {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topology-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      font-family: var(--mnk-font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+
+    .topology-live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      padding: 0.18rem 0.55rem;
+      font-size: 0.65rem;
+    }
+
+    .topology-stack-list {
+      display: flex;
+      flex-direction: column;
+      padding: 0.85rem;
+      gap: 0.6rem;
+    }
+
+    .topology-row {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .topology-row:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .topology-idx {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topology-info {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .topology-title {
+      font-family: var(--mnk-font-form);
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--fg-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topology-sub {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.7rem;
+      color: var(--fg-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topology-tags {
+      display: flex;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .topology-badge {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.66rem;
+      color: var(--fg-2);
+      background: var(--surface-inset);
+      border: 1px solid var(--border-grid);
+      padding: 0.22rem 0.5rem;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+
+    .topology-panel-foot {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      font-family: var(--mnk-font-mono);
+      font-size: 0.68rem;
+    }
+
+    .topology-stat {
+      padding: 0.6rem 0.85rem;
+      border-right: 1px solid var(--border-grid);
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .topology-stat:last-child { border-right: none; }
+    .topology-stat span.k { color: var(--fg-3); font-size: 0.62rem; }
+    .topology-stat span.v { color: var(--accent); font-weight: 600; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border-grid);
+    }
+    .metric-cell {
+      padding: 1.35rem 1.75rem;
+      border-right: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .metric-cell:last-child { border-right: none; }
+    .metric-val {
+      font-family: var(--mnk-font-display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--fg-1);
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+    }
+    .metric-val small {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .metric-desc { font-size: 0.82rem; color: var(--fg-2); }
+
+    .collapsible-section {
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-base);
+    }
+
+    .section-trigger {
+      width: 100%;
+      background: var(--surface-card);
+      border: none;
+      padding: 1.35rem 2.25rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      cursor: pointer;
+      text-align: left;
+      color: var(--fg-1);
+      transition: background 0.2s;
+    }
+
+    .section-trigger:hover { background: var(--surface-elevated); }
+
+    .section-trigger-idx {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      padding: 0.35rem 0.7rem;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .section-trigger-main {
+      display: flex;
+      align-items: baseline;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .section-trigger-title {
+      font-family: var(--mnk-font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      color: var(--fg-1);
+    }
+
+    .section-trigger-sub {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.76rem;
+      color: var(--fg-2);
+    }
+
+    .section-trigger-action {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.74rem;
+      color: var(--accent);
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      padding: 0.45rem 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: border-color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .section-trigger:hover .section-trigger-action {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .collapsible-section.is-open > .section-trigger {
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-elevated);
+    }
+
+    .section-collapse-wrapper {
+      display: none;
+    }
+
+    .collapsible-section.is-open > .section-collapse-wrapper {
+      display: block;
+      animation: fadeSlideDown 0.26s ease-out;
+    }
+
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .approach-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .approach-card {
+      padding: 2rem 2.25rem;
+      border-right: 1px solid var(--border-grid);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: var(--surface-card);
+      transition: background 0.2s;
+    }
+    .approach-card:last-child { border-right: none; }
+    .approach-card:hover { background: var(--surface-elevated); }
+    .approach-head {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .approach-icon {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-soft);
+      flex-shrink: 0;
+    }
+    .approach-card h3 {
+      font-family: var(--mnk-font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--fg-1);
+    }
+    .approach-card p { color: var(--fg-2); font-size: 0.88rem; line-height: 1.55; }
+
+    .projects-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      padding-right: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar { display: flex; overflow-x: auto; }
+    .filter-btn {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.74rem;
+      padding: 0.9rem 1.4rem;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border-grid);
+      color: var(--fg-2);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      color: var(--accent);
+      background: var(--surface-card);
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+
+    .expand-all-btn {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      color: var(--fg-2);
+      background: var(--surface-card);
+      border: 1px solid var(--border-grid);
+      padding: 0.42rem 0.85rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .expand-all-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .projects-list {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      background: var(--surface-base);
+    }
+
+    .project-tile {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+      position: relative;
+    }
+
+    .project-tile:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.55);
+      background: var(--surface-elevated);
+    }
+
+    .project-tile.is-open {
+      border-color: var(--accent-border);
+    }
+
+    .project-summary-bar {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 1.15rem 1.5rem;
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1.3fr) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      color: var(--fg-1);
+    }
+
+    .project-num-badge {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      padding: 0.3rem 0.55rem;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    .project-summary-Main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .project-summary-title {
+      font-family: var(--mnk-font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--fg-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-summary-sub {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.74rem;
+      color: var(--fg-2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-summary-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: flex-end;
+    }
+
+    .tag {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      color: var(--fg-2);
+      white-space: nowrap;
+    }
+
+    .project-toggle-pill {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      padding: 0.38rem 0.75rem;
+      white-space: nowrap;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .project-tile:hover .project-toggle-pill {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .project-collapse-wrap {
+      display: none;
+    }
+
+    .project-tile.is-open .project-collapse-wrap {
+      display: block;
+      animation: fadeSlideDown 0.24s ease-out;
+    }
+
+    .project-details-grid {
+      border-top: 1px solid var(--border-grid);
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      background: var(--surface-base);
+    }
+
+    .project-side-col {
+      padding: 1.5rem;
+      border-right: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+    }
+
+    .live-telemetry {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      padding: 0.85rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      font-family: var(--mnk-font-mono);
+    }
+    .telemetry-item { display: flex; flex-direction: column; gap: 0.1rem; }
+    .telemetry-lbl { font-size: 0.62rem; color: var(--fg-3); text-transform: uppercase; }
+    .telemetry-val { font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+
+    .project-status {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      color: var(--fg-2);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .project-status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    .project-main-col {
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .case-triad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+    .triad-box {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .triad-box h4 {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+    .triad-box p {
+      font-size: 0.84rem;
+      color: var(--fg-2);
+      line-height: 1.48;
+    }
+
+    .feature-bullets {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+    .feature-bullets li {
+      position: relative;
+      padding: 0.65rem 0.85rem 0.65rem 1.65rem;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      font-size: 0.83rem;
+      color: var(--fg-2);
+      line-height: 1.45;
+    }
+    .feature-bullets li::before {
+      content: "▹";
+      position: absolute;
+      left: 0.65rem;
+      top: 0.65rem;
+      font-family: var(--mnk-font-mono);
+      color: var(--accent);
+    }
+    .feature-bullets code {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.75rem;
+      color: var(--fg-1);
+      background: var(--surface-card);
+      border: 1px solid var(--border-grid);
+      padding: 0.05rem 0.35rem;
+      white-space: nowrap;
+    }
+
+    .compact-showcase {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      padding: 0.75rem 0.9rem;
+      display: none;
+    }
+    .compact-showcase.has-shots { display: block; }
+    .showcase-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.55rem;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.68rem;
+      color: var(--fg-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .showcase-bar span.hint { color: var(--accent); }
+
+    .screenshot-deck {
+      display: flex;
+      gap: 0.5rem;
+      height: 108px;
+      width: 100%;
+    }
+    .shot-card {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-base);
+      overflow: hidden;
+      cursor: zoom-in;
+      transition: flex 0.3s ease, border-color 0.2s;
+    }
+    .shot-card:hover {
+      flex: 2.1;
+      border-color: var(--accent);
+      z-index: 2;
+    }
+    .shot-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top left;
+      display: block;
+    }
+    .shot-index-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.62rem;
+      color: var(--accent);
+      background: rgba(6, 8, 11, 0.9);
+      border: 1px solid var(--accent-border);
+      padding: 0.1rem 0.4rem;
+      pointer-events: none;
+    }
+
+    .pipeline-box {
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      padding: 0.7rem 0.9rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.74rem;
+    }
+    .pipeline-node {
+      padding: 0.38rem 0.6rem;
+      background: var(--surface-inset);
+      border: 1px solid var(--border-focus);
+      color: var(--fg-1);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pipeline-arrow {
+      color: var(--accent);
+      font-size: 0.7rem;
+      white-space: nowrap;
+      padding: 0 0.25rem;
+    }
+
+    .stack-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stack-col {
+      padding: 1.85rem 2rem;
+      border-right: 1px solid var(--border-grid);
+      background: var(--surface-card);
+    }
+    .stack-col:last-child { border-right: none; }
+    .stack-col h3 {
+      font-family: var(--mnk-font-display);
+      font-size: 0.82rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+    .stack-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .stack-list li {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.8rem;
+      color: var(--fg-1);
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed var(--border-grid);
+      padding-bottom: 0.35rem;
+    }
+    .stack-list li span { color: var(--fg-3); font-size: 0.7rem; }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+    }
+    .contact-info {
+      padding: 2.5rem 2.75rem;
+      border-right: 1px solid var(--border-grid);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--surface-card);
+    }
+    .contact-info h2 {
+      font-family: var(--mnk-font-display);
+      font-size: clamp(1.4rem, 2.3vw, 2rem);
+      text-transform: uppercase;
+      line-height: 1.18;
+    }
+    .contact-links {
+      padding: 2.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.75rem;
+      background: var(--surface-elevated);
+    }
+    .contact-card {
+      padding: 0.95rem 1.25rem;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-inset);
+      color: var(--fg-1);
+      text-decoration: none;
+      font-family: var(--mnk-font-mono);
+      font-size: 0.82rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .contact-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .contact-card-meta { display: flex; flex-direction: column; gap: 0.15rem; }
+    .contact-card-label { font-size: 0.66rem; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .contact-card-val { color: var(--fg-1); font-weight: 500; }
+    .copy-badge {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.68rem;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .lightbox-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(6, 8, 11, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .lightbox-modal.open { display: flex; }
+    .lightbox-frame {
+      max-width: 1120px;
+      width: 100%;
+      border: 1px solid var(--border-focus);
+      background: var(--surface-base);
+      display: flex;
+      flex-direction: column;
+    }
+    .lightbox-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.7rem 1.15rem;
+      border-bottom: 1px solid var(--border-grid);
+      background: var(--surface-card);
+      font-family: var(--mnk-font-mono);
+      font-size: 0.76rem;
+    }
+    .lightbox-counter { color: var(--accent); }
+    .lightbox-controls { display: flex; gap: 0.45rem; }
+    .lb-btn {
+      font-family: var(--mnk-font-mono);
+      font-size: 0.72rem;
+      background: var(--surface-elevated);
+      color: var(--fg-1);
+      border: 1px solid var(--border-grid);
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+    }
+    .lb-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .lightbox-body {
+      background: #040507;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-height: 78vh;
+      overflow: hidden;
+    }
+    .lightbox-body img {
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid, .approach-grid, .stack-matrix, .contact-grid, .project-details-grid { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .hero-main, .approach-card, .stack-col, .contact-info, .project-side-col { border-right: none; border-bottom: 1px solid var(--border-grid); }
+      .project-summary-bar { grid-template-columns: 68px 1fr auto; }
+      .project-summary-tags { display: none; }
+      .case-triad, .feature-bullets, .pipeline-box { grid-template-columns: 1fr; }
+      .pipeline-arrow { text-align: center; transform: rotate(90deg); padding: 0.15rem 0; }
+      nav, .pipeline-scroll-hud { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="archPipelineCanvas" aria-hidden="true"></canvas>
+
+  <div class="pipeline-scroll-hud" aria-hidden="true">
+    <span id="hudPercent">00%</span>
+    <div class="hud-track"><div class="hud-fill" id="hudFill"></div></div>
+    <span class="hud-vertical-lbl">UML PIPELINE</span>
+  </div>
+
+  <header>
+    <div class="nav-bar">
+      <a href="#main" class="brand"><span>[ / ]</span> Дмитрий Ковалев</a>
+      <nav aria-label="Основная навигация">
+        <a href="#approach" data-open-section="approach">01. Подход</a>
+        <a href="#projects" data-open-section="projects">02. Проекты (06)</a>
+        <a href="#stack" data-open-section="stack">03. Технологии</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="https://github.com/ArtificalIntelligence" target="_blank" rel="noopener" class="nav-icon-link">GH ↗</a>
+        <a href="https://t.me/artificial88" target="_blank" rel="noopener" class="nav-icon-link">TG ↗</a>
+        <button class="theme-btn" id="themeToggle" type="button">[ ТЕМА: DARK ]</button>
+        <a href="#contact" class="nav-cta">Связаться ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="arch-container">
+    <div class="section-meta">
+      <div><span class="status-dot"></span>SYSTEM ARCHITECTURE & INFRASTRUCTURE PORTFOLIO</div>
+      <div>САНКТ-ПЕТЕРБУРГ · РОЗНИЧНАЯ СЕТЬ 200+ ТОЧЕК</div>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section class="hero-grid reveal-on-scroll">
+      <div class="hero-main">
+        <div>
+          <div class="hero-badge">HEAD OF IT INFRASTRUCTURE · SYSTEMS & AUTOMATION</div>
+          <h1>Меньше рутины.<br><span>Больше системы.</span></h1>
+          <p class="hero-lead">
+            <strong>Дмитрий Ковалев — руководитель ИТ-инфраструктуры и системный инженер.</strong><br>
+            Управляю ИТ-контуром розничной сети из 200+ магазинов и центрального офиса. Проектирую отказоустойчивую архитектуру, внедряю Open Source вместо дорогих лицензий и автоматизирую процессы на стыке Linux, сетей, 1С, Python и Rust.
+          </p>
+          <div class="hero-actions">
+            <a href="#projects" class="btn-primary" data-open-section="projects">Открыть кейсы (06) <span>↓</span></a>
+            <a href="#contact" class="btn-secondary">Связаться <span>↗</span></a>
+          </div>
+        </div>
+        <div class="hero-quick-contacts">
+          <a href="mailto:shpekar88@gmail.com"><span class="lbl">EMAIL:</span> shpekar88@gmail.com</a>
+          <a href="https://t.me/artificial88" target="_blank" rel="noopener"><span class="lbl">TG:</span> @artificial88 ↗</a>
+          <a href="https://github.com/ArtificalIntelligence" target="_blank" rel="noopener"><span class="lbl">GITHUB:</span> ArtificalIntelligence ↗</a>
+        </div>
+      </div>
+
+      <!-- SYSTEM TOPOLOGY STACK -->
+      <div class="hero-blueprint">
+        <div class="topology-panel">
+          <div class="topology-panel-head">
+            <span>SYSTEM TOPOLOGY STACK</span>
+            <span class="topology-live-pill"><span class="status-dot" style="margin-right:4px;"></span>4 ACTIVE LAYERS</span>
+          </div>
+
+          <div class="topology-stack-list">
+            <div class="topology-row">
+              <div class="topology-idx">L1</div>
+              <div class="topology-info">
+                <div class="topology-title">Бизнес-контур и ERP</div>
+                <div class="topology-sub">1С:Предприятие · Отчётность · Обмены</div>
+              </div>
+              <div class="topology-tags">
+                <span class="topology-badge">ERP · OPS</span>
+              </div>
+            </div>
+
+            <div class="topology-row">
+              <div class="topology-idx">L2</div>
+              <div class="topology-info">
+                <div class="topology-title">Шлюзы API, микросервисы и боты</div>
+                <div class="topology-sub">FastAPI · VK Teams Bots · WebAssembly UI</div>
+              </div>
+              <div class="topology-tags">
+                <span class="topology-badge">PY · RUST · WASM</span>
+              </div>
+            </div>
+
+            <div class="topology-row">
+              <div class="topology-idx">L3</div>
+              <div class="topology-info">
+                <div class="topology-title">Отказоустойчивое хранение и TSDB</div>
+                <div class="topology-sub">PostgreSQL · Кластер RustFS S3 · VictoriaMetrics</div>
+              </div>
+              <div class="topology-tags">
+                <span class="topology-badge">PG · S3 · TSDB</span>
+              </div>
+            </div>
+
+            <div class="topology-row">
+              <div class="topology-idx">L4</div>
+              <div class="topology-info">
+                <div class="topology-title">Инфраструктура 200+ магазинов</div>
+                <div class="topology-sub">Frigate NVR · Snipe-IT ITAM · WireGuard Mesh</div>
+              </div>
+              <div class="topology-tags">
+                <span class="topology-badge">NVR · ITAM · VPN</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="topology-panel-foot">
+            <div class="topology-stat">
+              <span class="k">RETAIL NODES</span>
+              <span class="v">204 ONLINE</span>
+            </div>
+            <div class="topology-stat">
+              <span class="k">NVR INFERENCE</span>
+              <span class="v">10.21 ms (iGPU)</span>
+            </div>
+            <div class="topology-stat">
+              <span class="k">ITAM REGISTRY</span>
+              <span class="v">202 ASSETS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- МЕТРИКИ -->
+    <div class="metrics-grid reveal-on-scroll">
+      <div class="metric-cell">
+        <span class="metric-val">200+ <small>ТОЧЕК</small></span>
+        <p class="metric-desc">магазинов, складов и офисов в едином контуре управления</p>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val">0 ₽ <small>ЛИЦЕНЗИИ</small></span>
+        <p class="metric-desc">перевод видеонаблюдения, S3 и ITAM на проверенный Open Source</p>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val">End-to-End <small>ЦИКЛ</small></span>
+        <p class="metric-desc">от архитектуры и кода до CI/CD и регламентов для команды</p>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-val">24/7 <small>НАБЛЮДАЕМОСТЬ</small></span>
+        <p class="metric-desc">проактивный мониторинг каналов, камер, обменов 1С и бэкапов</p>
+      </div>
+    </div>
+
+    <!-- РАЗДЕЛ 01: ПОДХОД -->
+    <section id="approach" class="collapsible-section reveal-on-scroll">
+      <button type="button" class="section-trigger" aria-expanded="false">
+        <span class="section-trigger-idx">01 / ПОДХОД</span>
+        <div class="section-trigger-main">
+          <span class="section-trigger-title">Инженерия и управление</span>
+          <span class="section-trigger-sub">3 принципа: Архитектура · Автоматизация · Эксплуатация</span>
+        </div>
+        <span class="section-trigger-action">[ РАЗВЕРНУТЬ РАЗДЕЛ + ]</span>
+      </button>
+
+      <div class="section-collapse-wrapper">
+        <div class="approach-grid">
+          <article class="approach-card">
+            <div class="approach-head">
+              <div class="approach-icon">&lt;/&gt;</div>
+              <h3>Проектирую и пишу код</h3>
+            </div>
+            <p>Соединяю системное администрирование с прикладной разработкой: создаю сервисы на Python и Rust, разворачиваю Docker-кластеры и VPN-сети.</p>
+          </article>
+          <article class="approach-card">
+            <div class="approach-head">
+              <div class="approach-icon">⇄</div>
+              <h3>Решаю задачи бизнеса</h3>
+            </div>
+            <p>Фокусируюсь на снижении TCO и устранении ручных операций: автоматизирую алерты 1С, инвентаризацию касс и видеоконтроль розницы.</p>
+          </article>
+          <article class="approach-card">
+            <div class="approach-head">
+              <div class="approach-icon">◎</div>
+              <h3>Выстраиваю команду</h3>
+            </div>
+            <p>Руковожу системными администраторами и программистами 1С. Закрепляю результат понятной документацией, бэкапами и прозрачным SLA.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- РАЗДЕЛ 02: ПРОЕКТЫ -->
+    <section id="projects" class="collapsible-section reveal-on-scroll">
+      <button type="button" class="section-trigger" aria-expanded="false">
+        <span class="section-trigger-idx">02 / ПРОЕКТЫ</span>
+        <div class="section-trigger-main">
+          <span class="section-trigger-title">Архитектура и Production-кейсы</span>
+          <span class="section-trigger-sub">6 внедрённых решений: VK Teams API · Portal S3 · Moni WASM · RustFS · Frigate NVR · Snipe-IT</span>
+        </div>
+        <span class="section-trigger-action">[ РАЗВЕРНУТЬ РАЗДЕЛ + ]</span>
+      </button>
+
+      <div class="section-collapse-wrapper">
+        <div class="projects-toolbar">
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all" type="button">Все кейсы (06)</button>
+            <button class="filter-btn" data-filter="dev" type="button">Разработка и API (03)</button>
+            <button class="filter-btn" data-filter="infra" type="button">Инфраструктура (03)</button>
+          </div>
+          <button class="expand-all-btn" id="toggleAllProjectsBtn" type="button">[ РАЗВЕРНУТЬ ВСЕ КЕЙСЫ + ]</button>
+        </div>
+
+        <div class="projects-list">
+          <!-- КЕЙС 01: VK TEAMS BOT -->
+          <article class="project-tile" data-category="dev" data-uml-group="vkbot" data-gallery-prefix="vkbot">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 01</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Шлюз уведомлений и документов 1С → VK Teams</span>
+                <span class="project-summary-sub">vk-teams-bot · REST API маршрутизации алертов и PDF/XLSX отчётов</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">Python</span>
+                <span class="tag">FastAPI</span>
+                <span class="tag">1С HTTP</span>
+                <span class="tag">GitLab CI</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">Доставка</span><span class="telemetry-val">&lt; 180 мс</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Контур</span><span class="telemetry-val">5 ботов в проде</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Аутентификация</span><span class="telemetry-val">SERVICE_TOKEN</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">CI/CD</span><span class="telemetry-val">Pytest + Docker</span></div>
+                  </div>
+                  <div class="project-status">В промышленной эксплуатации</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Убрать ручную пересылку отчётов из 1С и задержки при сбоях обменов в рознице.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Унифицированный REST-шлюз с приёмом файлов в Base64 и маршрутизацией по чатам.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Мгновенная доставка инцидентов и выгрузок 1С/Mirapolis профильным отделам.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Приём печатных форм из 1С через эндпоинт <code>POST /notify/file/b64</code>.</li>
+                    <li>Изолированная авторизация внешних систем по заголовку <code>SERVICE_TOKEN</code>.</li>
+                    <li>Специализированные боты под обмены 1С, кадры Mirapolis и отвалы камер.</li>
+                    <li>Автоматический прогон контрактных тестов и деплой контейнера в GitLab CI.</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">1С:Предприятие / Mirapolis</span>
+                    <span class="pipeline-arrow">── JSON + Base64 ──►</span>
+                    <span class="pipeline-node">FastAPI Bot Gateway</span>
+                    <span class="pipeline-arrow">── Bot API TLS ──►</span>
+                    <span class="pipeline-node">Чаты VK Teams</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- КЕЙС 02: PORTAL API -->
+          <article class="project-tile" data-category="dev" data-uml-group="portal" data-gallery-prefix="portal">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 02</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Сервис корпоративного портала и S3-медиа</span>
+                <span class="project-summary-sub">portal-api · Backend новостей, регламентов и прямых загрузок в S3</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">FastAPI</span>
+                <span class="tag">SQLAlchemy</span>
+                <span class="tag">Alembic</span>
+                <span class="tag">RustFS S3</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">Хранилище</span><span class="telemetry-val">Presigned S3</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Миграции БД</span><span class="telemetry-val">Alembic Strict</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">СУБД</span><span class="telemetry-val">PostgreSQL 16</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">TTL ссылок</span><span class="telemetry-val">900 сек</span></div>
+                  </div>
+                  <div class="project-status">В промышленной эксплуатации</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Обеспечить быструю публикацию регламентов и вложений без перегрузки API-сервера.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Асинхронный API на PostgreSQL с генерацией временных Presigned URL в кластер S3.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Стабильная раздача тяжёлого контента для 200+ точек и строгие миграции схемы.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Прямая выгрузка статики клиентом в S3 по подписанным ссылкам <code>Presigned URL</code>.</li>
+                    <li>Версионирование схемы данных через <code>Alembic</code> без простоев при релизах.</li>
+                    <li>Ролевая валидация прав публикации и строгие схемы <code>Pydantic v2</code>.</li>
+                    <li>Полная контейнеризация с проверками целостности перед раскаткой.</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">Веб-клиент портала</span>
+                    <span class="pipeline-arrow">── REST / Auth ──►</span>
+                    <span class="pipeline-node">Portal API + PostgreSQL</span>
+                    <span class="pipeline-arrow">── Presigned S3 ──►</span>
+                    <span class="pipeline-node">Кластер RustFS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- КЕЙС 03: MONI (RUST + WASM) -->
+          <article class="project-tile" data-category="dev" data-uml-group="moni" data-gallery-prefix="moni">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 03</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Реактивный экран мониторинга на Rust и WebAssembly</span>
+                <span class="project-summary-sub">moni · Живая телеметрия узлов розницы, SSE-стриминг и контроль тишины</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">Rust</span>
+                <span class="tag">Leptos WASM</span>
+                <span class="tag">VictoriaMetrics</span>
+                <span class="tag">SSE</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">UI Runtime</span><span class="telemetry-val">WASM (Leptos)</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Транспорт</span><span class="telemetry-val">Server-Sent Events</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">TSDB Ядро</span><span class="telemetry-val">VictoriaMetrics</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Контроль</span><span class="telemetry-val">Watchdog Active</span></div>
+                  </div>
+                  <div class="project-status">В промышленной эксплуатации</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Исключить «тихие падения» агентов мониторинга и тяжёлые JS-дашборды для дежурных.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Сверхлёгкий клиент на Rust/WASM с пуш-потоком событий SSE и контролем пульса узлов.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Мгновенная индикация отвала любого магазина или сервера с минимальной нагрузкой на браузер.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Компиляция интерфейса в <code>WebAssembly</code> на фреймворке Leptos без тяжёлого JS.</li>
+                    <li>Реактивное обновление статусов через однонаправленный поток <code>SSE</code>.</li>
+                    <li>Детекция потери метрик (Dead Man's Switch) поверх <code>VictoriaMetrics</code>.</li>
+                    <li>Единая тепловая карта состояния 200+ точек и серверных служб.</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">Агенты 200+ Точек</span>
+                    <span class="pipeline-arrow">── Метрики ──►</span>
+                    <span class="pipeline-node">VictoriaMetrics + Rust</span>
+                    <span class="pipeline-arrow">── Поток SSE ──►</span>
+                    <span class="pipeline-node">Leptos WASM UI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- КЕЙС 04: RUSTFS S3 CLUSTER -->
+          <article class="project-tile" data-category="infra" data-uml-group="rustfs" data-gallery-prefix="rustfs">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 04</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Распределённый 4-узловой S3-кластер хранения</span>
+                <span class="project-summary-sub">rustfs-cluster · Отказоустойчивое объектное хранилище с Erasure Coding</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">RustFS (S3)</span>
+                <span class="tag">Erasure Coding</span>
+                <span class="tag">Nginx TLS</span>
+                <span class="tag">OpenVPN</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">Топология</span><span class="telemetry-val">4 Storage Nodes</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Защита данных</span><span class="telemetry-val">Erasure Coding</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Балансировка</span><span class="telemetry-val">Nginx Upstream</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Протокол</span><span class="telemetry-val">S3 API / TLS 1.3</span></div>
+                  </div>
+                  <div class="project-status">В промышленной эксплуатации</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Создать собственное S3-хранилище под архивы, бэкапы и медиа без облачных тарифов.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Кластер из 4 нод RustFS с избыточным кодированием и балансировкой через Nginx TLS.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Сохранение доступности данных на чтение и запись даже при выходе узла из строя.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Распределение блоков и чётности <code>Erasure Coding</code> между 4 узлами.</li>
+                    <li>Терминация шифрования и health-check балансировка на <code>Nginx TLS 1.3</code>.</li>
+                    <li>Связность узлов поверх защищённого туннелированного контура <code>OpenVPN</code>.</li>
+                    <li>Полная совместимость со стандартными клиентами <code>AWS S3 SDK</code> и бэкапами.</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">Корпоративные сервисы</span>
+                    <span class="pipeline-arrow">── S3 HTTPS ──►</span>
+                    <span class="pipeline-node">Nginx Load Balancer</span>
+                    <span class="pipeline-arrow">── Erasure Coding ──►</span>
+                    <span class="pipeline-node">4 Ноды RustFS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- КЕЙС 05: FRIGATE NVR -->
+          <article class="project-tile" data-category="infra" data-uml-group="frigate" data-gallery-prefix="frigate">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 05</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Видеонаблюдение 200+ магазинов без платных лицензий</span>
+                <span class="project-summary-sub">frigate v0.18 + cam_monitor · Аппаратный декодинг Intel iGPU и WebRTC</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">Frigate NVR</span>
+                <span class="tag">go2rtc</span>
+                <span class="tag">Intel iGPU</span>
+                <span class="tag">WireGuard</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">Inference Speed</span><span class="telemetry-val">10.21 ms</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Storage Pool</span><span class="telemetry-val">3.24 / 3.58 TiB</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">iGPU Decode</span><span class="telemetry-val">37.45% Load</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">SHM RAMDisk</span><span class="telemetry-val">2.49 / 4.0 GiB</span></div>
+                  </div>
+                  <div class="project-status">В промышленной эксплуатации · 0 ₽ лицензии</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Уйти от проприетарных VMS с поканальной оплатой при масштабировании на 200+ точек.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Кластер Frigate NVR с декодингом на Intel iGPU, рестримом go2rtc и сетью WireGuard.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Мгновенный WebRTC-просмотр витрины камер, умный архив и 100% экономия на лицензиях.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Аппаратный декодинг H.264/H.265 и OpenVINO-инференс (~10.2 мс) на <code>Intel iGPU</code>.</li>
+                    <li>Защита дисков от износа: кольцевой буфер сегментов вынесен в RAM <code>/dev/shm</code>.</li>
+                    <li>Бесшовный рестриминг потоков в браузер через <code>go2rtc</code> (WebRTC / MSE).</li>
+                    <li>Автоматический опрос доступности RTSP-потоков демоном <code>cam_monitor</code>.</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА (FRIGATE NVR)</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">Камеры 200+ Магазинов</span>
+                    <span class="pipeline-arrow">── WireGuard RTSP ──►</span>
+                    <span class="pipeline-node">Frigate NVR (Intel iGPU)</span>
+                    <span class="pipeline-arrow">── WebRTC / API ──►</span>
+                    <span class="pipeline-node">Витрина + Бот алертов</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- КЕЙС 06: SNIPE-IT ITAM -->
+          <article class="project-tile" data-category="infra" data-uml-group="snipeit" data-gallery-prefix="snipeit">
+            <button type="button" class="project-summary-bar" aria-expanded="false">
+              <span class="project-num-badge">CASE 06</span>
+              <div class="project-summary-Main">
+                <span class="project-summary-title">Централизованный учёт ИТ-активов от склада до кассы</span>
+                <span class="project-summary-sub">snipe-it v8.7 · Жизненный цикл оборудования, маркировка TBK и авто-бэкапы</span>
+              </div>
+              <div class="project-summary-tags">
+                <span class="tag">Snipe-IT</span>
+                <span class="tag">Docker Compose</span>
+                <span class="tag">Caddy PKI</span>
+                <span class="tag">SMB Backup</span>
+              </div>
+              <span class="project-toggle-pill">[ ДЕТАЛИ + ]</span>
+            </button>
+
+            <div class="project-collapse-wrap">
+              <div class="project-details-grid">
+                <div class="project-side-col">
+                  <div class="live-telemetry">
+                    <div class="telemetry-item"><span class="telemetry-lbl">Учтено техники</span><span class="telemetry-val">202 ед. (194 в сети)</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Локации</span><span class="telemetry-val">193 точки + Офис</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Инв. теги</span><span class="telemetry-val">TBK-00001</span></div>
+                    <div class="telemetry-item"><span class="telemetry-lbl">Резервная копия</span><span class="telemetry-val">Daily 02:00 SMB</span></div>
+                  </div>
+                  <div class="project-status">Внедрено в процессы «Табакон»</div>
+                </div>
+
+                <div class="project-main-col">
+                  <div class="case-triad">
+                    <div class="triad-box">
+                      <h4>Задача</h4>
+                      <p>Исключить потери техники при перемещениях между складом ИТ, ремонтом и 193 точками.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Решение</h4>
+                      <p>Система Snipe-IT в Docker за Caddy HTTPS со сквозной маркировкой штрихкодами TBK.</p>
+                    </div>
+                    <div class="triad-box">
+                      <h4>Результат</h4>
+                      <p>Полная история каждой кассы, сканера и ПК за 2 секунды с ротацией бэкапов на NAS.</p>
+                    </div>
+                  </div>
+
+                  <ul class="feature-bullets">
+                    <li>Единый стандарт инвентарных меток <code>TBK-xxxxx</code> со штрихкодами Code 128 и QR.</li>
+                    <li>Внутренний центр сертификации и HTTPS-терминация через <code>Caddy PKI</code>.</li>
+                    <li>Разграничение прав доступа администраторов и полный аудит выдач/возвратов.</li>
+                    <li>Ежедневный дамп БД и файлов в 02:00 по <code>Cron</code> на SMB-хранилище (30 дней).</li>
+                  </ul>
+
+                  <div class="compact-showcase">
+                    <div class="showcase-bar"><span>СКРИНШОТЫ ПРОЕКТА (SNIPE-IT)</span><span class="hint">КЛИК — УВЕЛИЧИТЬ [↗]</span></div>
+                    <div class="screenshot-deck"></div>
+                  </div>
+
+                  <div class="pipeline-box">
+                    <span class="pipeline-node">Склад ИТ (Метки TBK)</span>
+                    <span class="pipeline-arrow">── Caddy HTTPS ──►</span>
+                    <span class="pipeline-node">Snipe-IT + MariaDB</span>
+                    <span class="pipeline-arrow">── Cron 02:00 ──►</span>
+                    <span class="pipeline-node">Архив SMB NAS (30d)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- РАЗДЕЛ 03: ТЕХНОЛОГИИ -->
+    <section id="stack" class="collapsible-section reveal-on-scroll">
+      <button type="button" class="section-trigger" aria-expanded="false">
+        <span class="section-trigger-idx">03 / СТЕК</span>
+        <div class="section-trigger-main">
+          <span class="section-trigger-title">Технологическая матрица</span>
+          <span class="section-trigger-sub">Инфраструктура · Разработка · Хранение и NVR · Управление ИТ</span>
+        </div>
+        <span class="section-trigger-action">[ РАЗВЕРНУТЬ РАЗДЕЛ + ]</span>
+      </button>
+
+      <div class="section-collapse-wrapper">
+        <div class="stack-matrix">
+          <div class="stack-col">
+            <h3>Инфраструктура</h3>
+            <ul class="stack-list">
+              <li>Linux (Debian / Ubuntu) <span>Core</span></li>
+              <li>Docker & Compose <span>Prod</span></li>
+              <li>WireGuard / OpenVPN <span>Mesh</span></li>
+              <li>Nginx / Caddy PKI <span>Edge</span></li>
+            </ul>
+          </div>
+          <div class="stack-col">
+            <h3>Разработка</h3>
+            <ul class="stack-list">
+              <li>Python (FastAPI / Async) <span>API</span></li>
+              <li>Rust (Leptos / WASM) <span>UI</span></li>
+              <li>1С:Предприятие 8.3 <span>ERP</span></li>
+              <li>GitLab CI/CD <span>Pipe</span></li>
+            </ul>
+          </div>
+          <div class="stack-col">
+            <h3>Данные и NVR</h3>
+            <ul class="stack-list">
+              <li>PostgreSQL / MariaDB <span>DB</span></li>
+              <li>RustFS Cluster (S3) <span>Object</span></li>
+              <li>VictoriaMetrics / Zabbix <span>TSDB</span></li>
+              <li>Frigate NVR & go2rtc <span>Video</span></li>
+            </ul>
+          </div>
+          <div class="stack-col">
+            <h3>Управление</h3>
+            <ul class="stack-list">
+              <li>Руководство отделом ИТ <span>Lead</span></li>
+              <li>Сисадмины & Программисты 1С <span>Team</span></li>
+              <li>Snipe-IT & TCO Бюджет <span>ITAM</span></li>
+              <li>SLA розницы 200+ точек <span>Ops</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ФУТЕР -->
+    <footer id="contact" class="reveal-on-scroll">
+      <div class="section-meta">
+        <div>[ 04 / СВЯЗАТЬСЯ ]</div>
+        <div>DIRECT COMMUNICATION CHANNELS</div>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h2>Готов обсудить архитектуру,<br>инфраструктуру или управление ИТ.</h2>
+          <div style="font-family: var(--mnk-font-mono); font-size: 0.74rem; color: var(--fg-3); margin-top: 1.5rem;">
+            ДМИТРИЙ КОВАЛЕВ · САНКТ-ПЕТЕРБУРГ · 2026
+          </div>
+        </div>
+        <div class="contact-links">
+          <a href="https://t.me/artificial88" target="_blank" rel="noopener" class="contact-card">
+            <div class="contact-card-meta">
+              <span class="contact-card-label">01 / Telegram</span>
+              <span class="contact-card-val">@artificial88</span>
+            </div>
+            <span>↗</span>
+          </a>
+          <div class="contact-card">
+            <a href="mailto:shpekar88@gmail.com" style="text-decoration: none; color: inherit; flex: 1;">
+              <div class="contact-card-meta">
+                <span class="contact-card-label">02 / Email</span>
+                <span class="contact-card-val">shpekar88@gmail.com</span>
+              </div>
+            </a>
+            <button class="copy-badge" id="copyEmailBtn" type="button">КОПИРОВАТЬ</button>
+          </div>
+          <a href="https://github.com/ArtificalIntelligence" target="_blank" rel="noopener" class="contact-card">
+            <div class="contact-card-meta">
+              <span class="contact-card-label">03 / GitHub</span>
+              <span class="contact-card-val">github.com/ArtificalIntelligence</span>
+            </div>
+            <span>↗</span>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ЛАЙТБОКС -->
+  <div class="lightbox-modal" id="lightboxModal" role="dialog" aria-modal="true" aria-label="Просмотр скриншота">
+    <div class="lightbox-frame">
+      <div class="lightbox-top">
+        <span class="lightbox-counter" id="lbCounter">[ 01 / 01 ]</span>
+        <div class="lightbox-controls">
+          <button class="lb-btn" id="lbPrev" type="button">← ПРЕД</button>
+          <button class="lb-btn" id="lbNext" type="button">СЛЕД →</button>
+          <button class="lb-btn" id="lbClose" type="button">[ ESC / ЗАКРЫТЬ ]</button>
+        </div>
+      </div>
+      <div class="lightbox-body">
+        <img src="" alt="Screenshot" id="lbImage">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.reveal-on-scroll').forEach((el, index) => {
+      el.style.transitionDelay = `${Math.min(index * 45, 180)}ms`;
+      revealObserver.observe(el);
+    });
+
+    function setSectionState(sectionEl, openState) {
+      const btn = sectionEl.querySelector('.section-trigger');
+      const actionBadge = sectionEl.querySelector('.section-trigger-action');
+      sectionEl.classList.toggle('is-open', openState);
+      if (btn) btn.setAttribute('aria-expanded', String(openState));
+      if (actionBadge) {
+        actionBadge.textContent = openState ? '[ СВЕРНУТЬ РАЗДЕЛ − ]' : '[ РАЗВЕРНУТЬ РАЗДЕЛ + ]';
+      }
+      updateMetricsAfterLayoutChange();
+    }
+
+    document.querySelectorAll('.collapsible-section').forEach((sectionEl) => {
+      const trigger = sectionEl.querySelector('.section-trigger');
+      trigger.addEventListener('click', () => {
+        const isOpen = sectionEl.classList.contains('is-open');
+        setSectionState(sectionEl, !isOpen);
+      });
+    });
+
+    document.querySelectorAll('[data-open-section]').forEach((link) => {
+      link.addEventListener('click', () => {
+        const targetId = link.getAttribute('data-open-section');
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) setSectionState(targetSection, true);
+      });
+    });
+
+    function setProjectTileState(tile, openState) {
+      const summaryBtn = tile.querySelector('.project-summary-bar');
+      const pill = tile.querySelector('.project-toggle-pill');
+      tile.classList.toggle('is-open', openState);
+      if (summaryBtn) summaryBtn.setAttribute('aria-expanded', String(openState));
+      if (pill) pill.textContent = openState ? '[ СВЕРНУТЬ − ]' : '[ ДЕТАЛИ + ]';
+      updateMetricsAfterLayoutChange();
+    }
+
+    document.querySelectorAll('.project-tile').forEach((tile) => {
+      const summaryBar = tile.querySelector('.project-summary-bar');
+      summaryBar.addEventListener('click', () => {
+        const isOpen = tile.classList.contains('is-open');
+        setProjectTileState(tile, !isOpen);
+      });
+    });
+
+    const toggleAllProjectsBtn = document.getElementById('toggleAllProjectsBtn');
+    let allProjectsExpanded = false;
+    toggleAllProjectsBtn.addEventListener('click', () => {
+      allProjectsExpanded = !allProjectsExpanded;
+      document.querySelectorAll('.project-tile').forEach((tile) => {
+        if (tile.style.display !== 'none') {
+          setProjectTileState(tile, allProjectsExpanded);
+        }
+      });
+      toggleAllProjectsBtn.textContent = allProjectsExpanded
+        ? '[ СВЕРНУТЬ ВСЕ КЕЙСЫ − ]'
+        : '[ РАЗВЕРНУТЬ ВСЕ КЕЙСЫ + ]';
+    });
+
+    const modal = document.getElementById('lightboxModal');
+    const lbImage = document.getElementById('lbImage');
+    const lbCounter = document.getElementById('lbCounter');
+    const lbPrev = document.getElementById('lbPrev');
+    const lbNext = document.getElementById('lbNext');
+    const lbClose = document.getElementById('lbClose');
+
+    let currentDeckUrls = [];
+    let currentIndex = 0;
+
+    function updateLightbox() {
+      if (!currentDeckUrls.length) return;
+      lbImage.src = currentDeckUrls[currentIndex];
+      const idxStr = String(currentIndex + 1).padStart(2, '0');
+      const totalStr = String(currentDeckUrls.length).padStart(2, '0');
+      lbCounter.textContent = `[ ${idxStr} / ${totalStr} ]`;
+    }
+
+    function probeImage(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    }
+
+    async function findExistingShot(prefix, index) {
+      const extensions = ['png', 'PNG', 'jpg', 'JPG', 'jpeg', 'webp'];
+      for (const ext of extensions) {
+        const found = await probeImage(`${prefix}${index}.${ext}`);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    async function initProjectGalleries() {
+      const tiles = document.querySelectorAll('.project-tile[data-gallery-prefix]');
+      for (const tile of tiles) {
+        const prefix = tile.getAttribute('data-gallery-prefix');
+        const showcase = tile.querySelector('.compact-showcase');
+        const deck = tile.querySelector('.screenshot-deck');
+        if (!prefix || !showcase || !deck) continue;
+
+        const foundUrls = [];
+        for (let i = 1; i <= 12; i++) {
+          const validUrl = await findExistingShot(prefix, i);
+          if (validUrl) {
+            foundUrls.push(validUrl);
+          } else {
+            break;
+          }
+        }
+
+        if (foundUrls.length > 0) {
+          deck.innerHTML = '';
+          foundUrls.forEach((url, idx) => {
+            const card = document.createElement('div');
+            card.className = 'shot-card';
+            const numStr = String(idx + 1).padStart(2, '0');
+            card.innerHTML = `
+              <img src="${url}" alt="${prefix} screenshot ${numStr}" loading="lazy">
+              <span class="shot-index-badge">${numStr}</span>
+            `;
+            card.addEventListener('click', (e) => {
+              e.stopPropagation();
+              currentDeckUrls = foundUrls;
+              currentIndex = idx;
+              updateLightbox();
+              modal.classList.add('open');
+            });
+            deck.appendChild(card);
+          });
+          showcase.classList.add('has-shots');
+        } else {
+          showcase.classList.remove('has-shots');
+        }
+      }
+      updateMetricsAfterLayoutChange();
+    }
+
+    initProjectGalleries();
+
+    lbPrev.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentIndex = (currentIndex - 1 + currentDeckUrls.length) % currentDeckUrls.length;
+      updateLightbox();
+    });
+    lbNext.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentIndex = (currentIndex + 1) % currentDeckUrls.length;
+      updateLightbox();
+    });
+    lbClose.addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('open')) return;
+      if (e.key === 'Escape') modal.classList.remove('open');
+      if (e.key === 'ArrowLeft') lbPrev.click();
+      if (e.key === 'ArrowRight') lbNext.click();
+    });
+
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const projectTiles = document.querySelectorAll('.project-tile');
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.getAttribute('data-filter');
+        projectTiles.forEach((tile) => {
+          const match = filter === 'all' || tile.getAttribute('data-category') === filter;
+          tile.style.display = match ? 'block' : 'none';
+        });
+        updateMetricsAfterLayoutChange();
+      });
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    let isLightTheme = false;
+    themeToggle.addEventListener('click', () => {
+      const html = document.documentElement;
+      isLightTheme = html.getAttribute('data-theme') !== 'light';
+      if (isLightTheme) {
+        html.setAttribute('data-theme', 'light');
+        themeToggle.textContent = '[ ТЕМА: LIGHT ]';
+      } else {
+        html.removeAttribute('data-theme');
+        themeToggle.textContent = '[ ТЕМА: DARK ]';
+      }
+    });
+
+    const copyEmailBtn = document.getElementById('copyEmailBtn');
+    copyEmailBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText('shpekar88@gmail.com').then(() => {
+        const orig = copyEmailBtn.textContent;
+        copyEmailBtn.textContent = 'СКОПИРОВАНО ✓';
+        setTimeout(() => { copyEmailBtn.textContent = orig; }, 2000);
+      });
+    });
+
+    const canvas = document.getElementById('archPipelineCanvas');
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+    const hudFill = document.getElementById('hudFill');
+    const hudPercent = document.getElementById('hudPercent');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let docHeight = document.documentElement.scrollHeight;
+    let scrollY = window.scrollY;
+    let activeHoverGroup = null;
+    let mouseX = -500;
+    let mouseY = -500;
+
+    const umlNodes = [
+      { id: 'edge',    xr: 0.05, yr: 0.14, title: '200+ RETAIL NODES', group: 'frigate' },
+      { id: 'erp',     xr: 0.95, yr: 0.18, title: '1C:ENTERPRISE',     group: 'vkbot'   },
+      { id: 'gateway', xr: 0.05, yr: 0.36, title: 'FASTAPI GATEWAY',   group: 'portal'  },
+      { id: 'vkbot',   xr: 0.95, yr: 0.40, title: 'VK TEAMS ROUTER',   group: 'vkbot'   },
+      { id: 'moni',    xr: 0.05, yr: 0.58, title: 'MONI WASM UI',      group: 'moni'    },
+      { id: 'rustfs',  xr: 0.95, yr: 0.62, title: 'RUSTFS 4-NODE S3',  group: 'rustfs'  },
+      { id: 'frigate', xr: 0.05, yr: 0.80, title: 'FRIGATE NVR 0.18',  group: 'frigate' },
+      { id: 'snipeit', xr: 0.95, yr: 0.86, title: 'SNIPE-IT ITAM',     group: 'snipeit' }
+    ];
+
+    const umlEdges = [
+      { from: 'edge',    to: 'gateway' },
+      { from: 'erp',     to: 'vkbot' },
+      { from: 'gateway', to: 'moni' },
+      { from: 'vkbot',   to: 'rustfs' },
+      { from: 'moni',    to: 'frigate' },
+      { from: 'rustfs',  to: 'snipeit' }
+    ];
+
+    const packets = umlEdges.map((_, idx) => ({
+      progress: (idx * 0.22) % 1,
+      baseSpeed: 0.0045 + (idx % 2) * 0.0012
+    }));
+
+    let cachedNodeMap = {};
+
+    function rebuildNodeCache() {
+      cachedNodeMap = {};
+      for (let i = 0; i < umlNodes.length; i++) {
+        const n = umlNodes[i];
+        cachedNodeMap[n.id] = {
+          id: n.id,
+          title: n.title,
+          group: n.group,
+          x: Math.round(n.xr * width),
+          y: Math.round(n.yr * docHeight)
+        };
+      }
+    }
+
+    function updateHud() {
+      const maxScroll = Math.max(1, docHeight - height);
+      const pct = Math.min(100, Math.max(0, Math.round((scrollY / maxScroll) * 100)));
+      if (hudFill) hudFill.style.height = `${pct}%`;
+      if (hudPercent) hudPercent.textContent = `${String(pct).padStart(2, '0')}%`;
+    }
+
+    function updateMetricsAfterLayoutChange() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      rebuildNodeCache();
+      updateHud();
+    }
+
+    window.addEventListener('resize', updateMetricsAfterLayoutChange, { passive: true });
+    window.addEventListener('scroll', () => {
+      scrollY = window.scrollY;
+      updateHud();
+    }, { passive: true });
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }, { passive: true });
+
+    document.querySelectorAll('.project-tile').forEach((tile) => {
+      tile.addEventListener('mouseenter', () => {
+        activeHoverGroup = tile.getAttribute('data-uml-group');
+      });
+      tile.addEventListener('mouseleave', () => {
+        activeHoverGroup = null;
+      });
+    });
+
+    updateMetricsAfterLayoutChange();
+
+    const FRAME_INTERVAL = 1000 / 30;
+    let lastFrameTime = 0;
+
+    function renderLoop(timestamp) {
+      requestAnimationFrame(renderLoop);
+
+      if (document.hidden) return;
+      if (timestamp - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = timestamp;
+
+      ctx.clearRect(0, 0, width, height);
+
+      if (mouseX > 0 && mouseY > 0) {
+        const gridStep = 24;
+        const radius = 105;
+        const rSq = radius * radius;
+        const startX = Math.floor((mouseX - radius) / gridStep) * gridStep;
+        const endX = mouseX + radius;
+        const pageMouseY = mouseY + scrollY;
+        const startPageY = Math.floor((pageMouseY - radius) / gridStep) * gridStep;
+        const endPageY = pageMouseY + radius;
+
+        ctx.fillStyle = isLightTheme ? '#059669' : '#10b981';
+
+        for (let gx = startX; gx <= endX; gx += gridStep) {
+          const dx = gx - mouseX;
+          const dxSq = dx * dx;
+          for (let gyPage = startPageY; gyPage <= endPageY; gyPage += gridStep) {
+            const dy = gyPage - pageMouseY;
+            const dSq = dxSq + dy * dy;
+            if (dSq < rSq) {
+              const screenY = gyPage - scrollY;
+              const alpha = (1 - dSq / rSq) * 0.85;
+              ctx.globalAlpha = alpha;
+              ctx.fillRect(gx - 1, screenY - 1, 2.5, 2.5);
+            }
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.font = '500 9px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i < umlEdges.length; i++) {
+        const edge = umlEdges[i];
+        const n1 = cachedNodeMap[edge.from];
+        const n2 = cachedNodeMap[edge.to];
+        if (!n1 || !n2) continue;
+
+        const y1 = n1.y - scrollY;
+        const y2 = n2.y - scrollY;
+
+        const isHighlighted = activeHoverGroup && (n1.group === activeHoverGroup || n2.group === activeHoverGroup);
+        const pkt = packets[i];
+        pkt.progress = (pkt.progress + pkt.baseSpeed * (isHighlighted ? 2.4 : 1)) % 1;
+
+        if (Math.max(y1, y2) < -40 || Math.min(y1, y2) > height + 40) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(n1.x, y1);
+        ctx.lineTo(n2.x, y2);
+        ctx.lineWidth = isHighlighted ? 1.5 : 1;
+        ctx.strokeStyle = isHighlighted
+          ? 'rgba(16, 185, 129, 0.55)'
+          : (isLightTheme ? 'rgba(100, 116, 139, 0.22)' : 'rgba(71, 85, 105, 0.26)');
+        ctx.stroke();
+
+        const px = n1.x + (n2.x - n1.x) * pkt.progress;
+        const py = y1 + (y2 - y1) * pkt.progress;
+
+        if (py >= -10 && py <= height + 10) {
+          ctx.beginPath();
+          ctx.arc(px, py, isHighlighted ? 3.2 : 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = isHighlighted ? '#10b981' : (isLightTheme ? '#059669' : '#34d399');
+          ctx.fill();
+        }
+      }
+
+      const boxW = 132;
+      const boxH = 26;
+      for (let i = 0; i < umlNodes.length; i++) {
+        const node = cachedNodeMap[umlNodes[i].id];
+        if (!node) continue;
+
+        const sy = node.y - scrollY;
+        if (sy < -40 || sy > height + 40) continue;
+
+        const isHighlighted = activeHoverGroup === node.group;
+        const x = node.x - boxW / 2;
+        const y = sy - boxH / 2;
+
+        ctx.fillStyle = isLightTheme ? '#ffffff' : '#0a0e14';
+        ctx.fillRect(x, y, boxW, boxH);
+
+        ctx.lineWidth = isHighlighted ? 1.5 : 1;
+        ctx.strokeStyle = isHighlighted
+          ? '#10b981'
+          : (isLightTheme ? 'rgba(148, 163, 184, 0.5)' : 'rgba(51, 65, 85, 0.55)');
+        ctx.strokeRect(x, y, boxW, boxH);
+
+        ctx.fillStyle = isHighlighted ? '#10b981' : (isLightTheme ? '#475569' : '#94a3b8');
+        ctx.fillText(node.title, node.x, sy);
+      }
+    }
+
+    requestAnimationFrame(renderLoop);
+  </script>
+</body>
+</html>
